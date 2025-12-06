@@ -37,7 +37,7 @@ services:
     image: ghcr.io/javadalmasi/fdn:latest
     container_name: invidious-loadbalancer
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       tor:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       - TZ=Asia/Tehran
       - USE_PROXY_MODE=true
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
       interval: 1m
       timeout: 10s
       retries: 3

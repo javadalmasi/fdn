@@ -64,9 +64,9 @@ docker-compose ps
 
 ### Endpoint ها
 
-- **Health Check**: `http://localhost:8080/health`
-- **Video Playback**: `http://localhost:8080/videoplayback?cpn=...&[other-params]`
-- **Piped Requests**: `http://localhost:8080/[other-endpoints]` (همه درخواست‌های غیر از /videoplayback به سرویس Piped Proxy فرستاده می‌شوند)
+- **Health Check**: `http://localhost:8081/health`
+- **Video Playback**: `http://localhost:8081/videoplayback?cpn=...&[other-params]`
+- **Piped Requests**: `http://localhost:8081/[other-endpoints]` (همه درخواست‌های غیر از /videoplayback به سرویس Piped Proxy فرستاده می‌شوند)
 
 ### مسیریابی درخواست‌ها
 
@@ -76,7 +76,7 @@ docker-compose ps
 ### مثال درخواست
 
 ```bash
-curl "http://localhost:8080/videoplayback?cpn=W41TgQcaXEPhoash&itag=140&..."
+curl "http://localhost:8081/videoplayback?cpn=W41TgQcaXEPhoash&itag=140&..."
 ```
 
 ### تست اتصال Tor

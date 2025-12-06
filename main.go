@@ -338,8 +338,8 @@ func main() {
 	go lb.cleanupSessions(ctx)
 
 	// استفاده از متد ServeHTTP برای مدیریت درخواست‌ها
-	log.Println("Load balancer شروع شد روی پورت 8080")
-	if err := http.ListenAndServe(":8080", lb); err != nil {
+	log.Println("Load balancer شروع شد روی پورت 8081")
+	if err := http.ListenAndServe(":8081", lb); err != nil {
 		log.Fatal(err)
 	}
 }
