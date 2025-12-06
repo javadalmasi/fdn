@@ -31,6 +31,7 @@ services:
       - loadbalancer-network
     environment:
       - TZ=Asia/Tehran
+      - USE_PROXY_MODE=true
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
       interval: 1m

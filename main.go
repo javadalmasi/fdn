@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
@@ -32,6 +33,7 @@ type LoadBalancer struct {
 	torProxyURL     string
 	currentIndex    int
 	indexMu         sync.Mutex
+	useProxyMode    bool
 }
 
 var (
@@ -46,10 +48,17 @@ var (
 )
 
 func NewLoadBalancer(torProxy string) *LoadBalancer {
+	// Check environment variable for proxy mode (default to true for backward compatibility)
+	useProxyMode := true
+	if proxyMode := os.Getenv("USE_PROXY_MODE"); proxyMode != "" {
+		useProxyMode = proxyMode == "true" || proxyMode == "1" || proxyMode == "yes"
+	}
+
 	lb := &LoadBalancer{
-		backends:    make([]*Backend, 0),
-		sessionMap:  make(map[string]*SessionMapping),
-		torProxyURL: torProxy,
+		backends:     make([]*Backend, 0),
+		sessionMap:   make(map[string]*SessionMapping),
+		torProxyURL:  torProxy,
+		useProxyMode: useProxyMode,
 	}
 
 	for _, backendURL := range backendURLs {
@@ -236,18 +245,34 @@ func (lb *LoadBalancer) handleVideoPlayback(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// ساخت reverse proxy
-	proxy := httputil.NewSingleHostReverseProxy(targetURL)
-	
-	// تنظیم path به /companion/videoplayback
-	r.URL.Path = "/companion/videoplayback"
-	r.URL.Host = targetURL.Host
-	r.URL.Scheme = targetURL.Scheme
-	r.Host = targetURL.Host
+	if lb.useProxyMode {
+		// ساخت reverse proxy
+		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+		
+		// تنظیم path به /companion/videoplayback
+		r.URL.Path = "/companion/videoplayback"
+		r.URL.Host = targetURL.Host
+		r.URL.Scheme = targetURL.Scheme
+		r.Host = targetURL.Host
 
-	log.Printf("ریدایرکت %s با cpn=%s به %s", clientIP, cpn, backendURL)
-	
-	proxy.ServeHTTP(w, r)
+		log.Printf("پروکسی %s با cpn=%s به %s", clientIP, cpn, backendURL)
+		
+		proxy.ServeHTTP(w, r)
+	} else {
+		// تغییر path به /companion/videoplayback و ریدایرکت
+		redirectURL := backendURL + "/companion/videoplayback"
+		
+		// اضافه کردن پارامترهای کوئری
+		query := r.URL.Query()
+		queryString := query.Encode()
+		if queryString != "" {
+			redirectURL += "?" + queryString
+		}
+
+		log.Printf("ریدایرکت %s با cpn=%s به %s", clientIP, cpn, redirectURL)
+		
+		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+	}
 }
 
 func (lb *LoadBalancer) handleHealth(w http.ResponseWriter, r *http.Request) {
