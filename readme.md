@@ -99,12 +99,12 @@ curl --socks5 localhost:9050 https://check.torproject.org
 
 ### بک‌اندهای پیش‌فرض
 
-- https://inv-eu2.nadeko.net
-- https://inv-eu3.nadeko.net
-- https://inv-eu4.nadeko.net
-- https://inv-eu5.nadeko.net
-- https://inv-us1.nadeko.net
-- https://inv-us2.nadeko.net
+- https://backend1.example.com
+- https://backend2.example.com
+- https://backend3.example.com
+- https://backend4.example.com
+- https://backend5.example.com
+- https://backend6.example.com
 
 ## مدیریت Session
 
@@ -186,7 +186,7 @@ docker-compose logs -f loadbalancer
 ```
 - به صورت دستی یکی از بک‌اندها را تست کنید:
 ```bash
-curl --socks5 localhost:9050 https://inv-eu2.nadeko.net/health
+curl --socks5 localhost:9050 https://backend1.example.com/health
 ```
 
 ### خطای Build
