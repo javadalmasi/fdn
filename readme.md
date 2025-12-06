@@ -11,6 +11,8 @@
 - ✅ Load balancing با الگوریتم Round Robin
 - ✅ Docker و Docker Compose با Tor داخلی
 - ✅ Health checks برای هر دو سرویس
+- ✅ پشتیبانی از چندین سرویس: Invidious (videoplayback) و Piped (سایر درخواست‌ها)
+- ✅ مسیریابی هوشمند درخواست‌ها بین سرویس‌ها
 
 ## نصب و راه‌اندازی
 
@@ -64,6 +66,12 @@ docker-compose ps
 
 - **Health Check**: `http://localhost:8080/health`
 - **Video Playback**: `http://localhost:8080/videoplayback?cpn=...&[other-params]`
+- **Piped Requests**: `http://localhost:8080/[other-endpoints]` (همه درخواست‌های غیر از /videoplayback به سرویس Piped Proxy فرستاده می‌شوند)
+
+### مسیریابی درخواست‌ها
+
+- درخواست‌هایی که به `/videoplayback` پایان می‌یابند، به بک‌اندهای Invidious مسیریابی می‌شوند
+- تمام سایر درخواست‌ها به سرویس Piped Proxy ارسال می‌شوند
 
 ### مثال درخواست
 
@@ -83,17 +91,26 @@ curl --socks5 localhost:9050 https://check.torproject.org
 
 ## معماری
 
-برنامه شامل دو سرویس Docker است:
+برنامه شامل سه سرویس Docker است:
 
 1. **Tor Proxy**: 
    - بر اساس Alpine Linux
    - استفاده از فایل پیکربندی torrc سفارشی
    - Health check داخلی
    - Volume برای ذخیره داده‌های Tor
+   - استفاده می‌شود برای بررسی سلامت بک‌اندها
 
-2. **Load Balancer**: 
+2. **Piped Proxy**: 
+   - سرویس 1337kavin/piped-proxy:latest
+   - مدیریت درخواست‌های غیر از /videoplayback
+   - ارائه واسط Piped برای جایگزین کردن یوتیوب
+
+3. **Load Balancer**: 
    - برنامه Go
    - اتصال به Tor برای health checks
+   - مسیریابی هوشمند درخواست‌ها:
+     - درخواست‌های /videoplayback را به بک‌اندهای Invidious هدایت می‌کند
+     - سایر درخواست‌ها را به سرویس Piped Proxy هدایت می‌کند
    - مدیریت session و توزیع بار
    - Health check endpoint
 

@@ -275,6 +275,38 @@ func (lb *LoadBalancer) handleVideoPlayback(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+func (lb *LoadBalancer) handleOtherRequests(w http.ResponseWriter, r *http.Request) {
+	// ساخت reverse proxy برای piped-proxy
+	targetURL, err := url.Parse("http://piped-proxy:8080")
+	if err != nil {
+		http.Error(w, "خطا در پردازش URL برای piped-proxy", http.StatusInternalServerError)
+		return
+	}
+
+	// ساخت reverse proxy
+	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+	
+	// تنظیمات اصلی
+	r.URL.Host = targetURL.Host
+	r.URL.Scheme = targetURL.Scheme
+	r.Host = targetURL.Host
+
+	log.Printf("ارسال درخواست %s به %s", r.URL.Path, targetURL.String())
+	
+	proxy.ServeHTTP(w, r)
+}
+
+func (lb *LoadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/videoplayback" {
+		lb.handleVideoPlayback(w, r)
+	} else if r.URL.Path == "/health" {
+		lb.handleHealth(w, r)
+	} else {
+		// تمام درخواست‌های دیگر به piped-proxy فرستاده می‌شوند
+		lb.handleOtherRequests(w, r)
+	}
+}
+
 func (lb *LoadBalancer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	healthyCount := 0
 	for _, backend := range lb.backends {
@@ -305,11 +337,9 @@ func main() {
 	// شروع پاکسازی sessions
 	go lb.cleanupSessions(ctx)
 
-	http.HandleFunc("/videoplayback", lb.handleVideoPlayback)
-	http.HandleFunc("/health", lb.handleHealth)
-
+	// استفاده از متد ServeHTTP برای مدیریت درخواست‌ها
 	log.Println("Load balancer شروع شد روی پورت 8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", lb); err != nil {
 		log.Fatal(err)
 	}
 }
