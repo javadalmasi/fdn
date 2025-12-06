@@ -1,47 +1,39 @@
 version: '3.8'
-
 services:
   tor:
-    image: ghcr.io/javadalmasi/fdn-tor:latest
+    image: 'ghcr.io/javadalmasi/fdn-tor:latest'
     container_name: tor-proxy
     ports:
-      - "9050:9050"
+      - '9050:9050'
     restart: unless-stopped
     networks:
       - loadbalancer-network
     volumes:
-      - tor-data:/var/lib/tor
+      - 'tor-data:/var/lib/tor'
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9050"]
+      test:
+        - CMD
+        - nc
+        - '-z'
+        - localhost
+        - '9050'
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
   piped-proxy:
-    image: 1337kavin/piped-proxy:latest
+    image: '1337kavin/piped-proxy:latest'
     container_name: piped-proxy
     restart: unless-stopped
     networks:
       - loadbalancer-network
     environment:
       - TZ=Asia/Tehran
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
   loadbalancer:
-    image: ghcr.io/javadalmasi/fdn:latest
+    image: 'ghcr.io/javadalmasi/fdn:latest'
     container_name: invidious-loadbalancer
-    ports:
-      - "8081:8081"
     depends_on:
       tor:
-        condition: service_healthy
-      piped-proxy:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -50,16 +42,19 @@ services:
       - TZ=Asia/Tehran
       - USE_PROXY_MODE=true
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
+      test:
+        - CMD
+        - wget
+        - '--spider'
+        - '-q'
+        - 'http://localhost:8081/health'
       interval: 1m
       timeout: 10s
       retries: 3
       start_period: 30s
-
 networks:
   loadbalancer-network:
     driver: bridge
-
 volumes:
   tor-data:
     driver: local
