@@ -1,0 +1,29 @@
+# پیکربندی Tor برای Load Balancer
+
+# SOCKS port برای اتصالات
+SocksPort 0.0.0.0:9050
+
+# Control port (اختیاری)
+ControlPort 9051
+
+# دایرکتوری داده
+DataDirectory /var/lib/tor
+
+# لاگ‌ها
+Log notice stdout
+
+# تنظیمات امنیتی
+CookieAuthentication 0
+HashedControlPassword ""
+
+# بهینه‌سازی برای استفاده از load balancer
+CircuitBuildTimeout 10
+LearnCircuitBuildTimeout 0
+MaxCircuitDirtiness 600
+
+# تعداد مسیرها
+NumEntryGuards 8
+
+# سرعت بیشتر
+KeepalivePeriod 60
+NewCircuitPeriod 30

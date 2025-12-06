@@ -1,0 +1,23 @@
+FROM alpine:latest
+
+# نصب Tor و ابزارهای مورد نیاز
+RUN apk add --no-cache tor netcat-openbsd
+
+# ایجاد دایرکتوری برای داده‌های Tor
+RUN mkdir -p /var/lib/tor && \
+    chown -R tor:tor /var/lib/tor
+
+# کپی فایل پیکربندی
+COPY torrc /etc/tor/torrc
+
+# تنظیم دسترسی‌ها
+RUN chown -R tor:tor /etc/tor
+
+# استفاده از کاربر tor
+USER tor
+
+# Expose SOCKS port
+EXPOSE 9050
+
+# اجرای Tor
+CMD ["tor", "-f", "/etc/tor/torrc"]

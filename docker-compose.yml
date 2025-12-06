@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  tor:
+    build:
+      context: .
+      dockerfile: Dockerfile.tor
+    container_name: tor-proxy
+    ports:
+      - "9050:9050"
+    restart: unless-stopped
+    networks:
+      - loadbalancer-network
+    volumes:
+      - tor-data:/var/lib/tor
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9050"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  loadbalancer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invidious-loadbalancer
+    ports:
+      - "8080:8080"
+    depends_on:
+      tor:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - loadbalancer-network
+    environment:
+      - TZ=Asia/Tehran
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  loadbalancer-network:
+    driver: bridge
+
+volumes:
+  tor-data:
+    driver: local
